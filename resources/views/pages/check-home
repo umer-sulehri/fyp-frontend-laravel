@@ -1,0 +1,648 @@
+@extends('layouts.app')
+
+@section('content')
+
+<section class="hero-section d-flex justify-content-center align-items-center" id="section_1">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-12 mx-auto">
+                <h1 class="text-white text-center">Video to Audio Converter</h1>
+                <h6 class="text-center">Extract high-quality audio from your videos with our powerful converter</h6>
+
+                <form method="get" class="custom-form mt-4 pt-2 mb-lg-0 mb-5" role="search">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bi-link-45deg" id="basic-addon1"></span>
+                        <input name="keyword" type="search" class="form-control" id="keyword" placeholder="Paste YouTube, Instagram or Facebook link" aria-label="Search">
+                        <button type="submit" class="form-control">Convert</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="featured-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <!-- Conversion Type Selection -->
+            <div class="col-12 mb-4">
+                <div class="custom-block bg-white shadow-lg p-4">
+                    <h4 class="text-center mb-4">Select Conversion Type</h4>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <button class="btn btn-primary conversion-btn" data-target="video-to-text">
+                            <i class="bi bi-file-text me-2"></i> Video to Text
+                        </button>
+                        <button class="btn btn-primary conversion-btn active" data-target="video-to-audio">
+                            <i class="bi bi-music-note-beamed me-2"></i> Video to Audio
+                        </button>
+                        <button class="btn btn-primary conversion-btn" data-target="audio-to-text">
+                            <i class="bi bi-mic me-2"></i> Audio to Text
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="col-lg-4 col-12 mb-4 mb-lg-0">
+                <div class="custom-block bg-white shadow-lg">
+                    <div class="d-flex flex-column h-100">
+                        <div class="d-flex mb-3 align-items-center">
+                            <h5 class="mb-0 flex-grow-1" id="upload-title">Upload Video</h5>
+                            <span class="badge bg-design rounded-pill">
+                                <i class="bi-upload"></i>
+                            </span>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+                            <input type="file" class="form-control" id="fileUpload" accept="video/*">
+                        </div>
+                        
+                        <div class="upload-preview mt-auto text-center p-4 position-relative">
+                            <img src="{{ asset('assets/images/topics/undraw_Remote_design_team_re_urdx.png') }}" 
+                                 class="custom-block-image img-fluid upload-image" alt="Upload file">
+                            <div class="upload-instructions">
+                                <i class="bi-cloud-arrow-up display-4 text-muted"></i>
+                                <p class="mt-2">Drag & drop video file or click to browse</p>
+                            </div>
+                            
+                            <!-- Video Player (hidden by default) -->
+                            <div class="video-player-container d-none mt-3 w-100">
+                                <video controls class="w-100 rounded" id="videoPlayer"></video>
+                            </div>
+                            
+                            <!-- Audio Player (hidden by default) -->
+                            <div class="audio-player-container d-none mt-3">
+                                <audio controls class="w-100" id="audioPlayer"></audio>
+                            </div>
+                        </div>
+                        
+                        <div class="progress mt-3 d-none" id="uploadProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+                        
+                        <button class="btn btn-success mt-3 d-none" id="processBtn">
+                            <i class="bi bi-gear me-2"></i> Extract Audio
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Audio Output Section -->
+            <div class="col-lg-8 col-12">
+                <div class="custom-block custom-block-overlay">
+                    <div class="d-flex flex-column h-100">
+                        <div class="custom-block-overlay-text">
+                            <div class="d-flex mb-3 align-items-center">
+                                <h4 class="mb-0 flex-grow-1">
+                                    <i class="bi bi-music-note-beamed me-2"></i> Extracted Audio
+                                </h4>
+                                <span class="badge bg-success rounded-pill" id="statusBadge">
+                                    <i class="bi-check-circle me-1"></i> Ready
+                                </span>
+                            </div>
+                            
+                            <div class="audio-output-container p-4">
+                                <div class="audio-info mb-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-file-earmark-music display-4 text-primary me-3"></i>
+                                        <div>
+                                            <h5 id="audioFilename">No audio extracted yet</h5>
+                                            <div class="text-muted" id="audioMetadata">
+                                                <span id="audioDuration">--:--</span> • 
+                                                <span id="audioSize">0 MB</span> • 
+                                                <span id="audioFormat">MP3</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="audio-controls">
+                                        <audio controls class="w-100 mb-3" id="outputAudioPlayer"></audio>
+                                    </div>
+                                </div>
+                                
+                                <div class="audio-settings mb-4">
+                                    <h5 class="mb-3">Audio Settings</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Format</label>
+                                            <select class="form-select" id="audioFormatSelect">
+                                                <option value="mp3" selected>MP3</option>
+                                                <option value="wav">WAV</option>
+                                                <option value="m4a">M4A</option>
+                                                <option value="ogg">OGG</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Quality</label>
+                                            <select class="form-select" id="audioQualitySelect">
+                                                <option value="high" selected>High (320kbps)</option>
+                                                <option value="medium">Medium (192kbps)</option>
+                                                <option value="low">Low (128kbps)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-primary" id="downloadAudioBtn" disabled>
+                                            <i class="bi bi-download me-1"></i> Download Audio
+                                        </button>
+                                        <button class="btn btn-outline-primary" id="copyAudioLinkBtn" disabled>
+                                            <i class="bi bi-link-45deg me-1"></i> Copy Link
+                                        </button>
+                                    </div>
+                                    
+                                    <button class="btn btn-outline-secondary" id="editMetadataBtn">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit Metadata
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="section-overlay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="explore-section section-padding" id="section_2">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="mb-4">Key Features</h2>
+                <p>Discover what makes our Video to Audio Converter stand out</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="quality-tab" data-bs-toggle="tab" 
+                            data-bs-target="#quality-tab-pane" type="button">
+                        <i class="bi bi-music-note-list me-2"></i> High Quality
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="formats-tab" data-bs-toggle="tab" 
+                            data-bs-target="#formats-tab-pane" type="button">
+                        <i class="bi bi-file-earmark-music me-2"></i> Multiple Formats
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="speed-tab" data-bs-toggle="tab" 
+                            data-bs-target="#speed-tab-pane" type="button">
+                        <i class="bi bi-lightning me-2"></i> Fast Processing
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="tab-content" id="myTabContent">
+                    <!-- Quality Tab -->
+                    <div class="tab-pane fade show active" id="quality-tab-pane" role="tabpanel">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Lossless Extraction</h5>
+                                            <p class="mb-0">Preserve the original audio quality from your videos</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-soundwave"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_audio_conversation_re_3t38.png') }}" 
+                                         class="custom-block-image img-fluid" alt="High quality audio">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Quality Options</h5>
+                                            <p class="mb-0">Choose from different bitrates to suit your needs</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-sliders"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_happy_music_g6wc.png') }}" 
+                                         class="custom-block-image img-fluid" alt="Quality options">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">No Compression</h5>
+                                            <p class="mb-0">Get the full audio track without quality loss</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-file-earmark-break"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_compose_music_re_wpiw.png') }}" 
+                                         class="custom-block-image img-fluid" alt="No compression">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formats Tab -->
+                    <div class="tab-pane fade" id="formats-tab-pane" role="tabpanel">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">MP3 Format</h5>
+                                            <p class="mb-0">Universal format compatible with all devices</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-filetype-mp3"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_Podcast_audience_re_4i5q.png') }}" 
+                                         class="custom-block-image img-fluid" alt="MP3 format">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">WAV Format</h5>
+                                            <p class="mb-0">Uncompressed format for professional use</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-filetype-wav"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_music_re_a2jk.png') }}" 
+                                         class="custom-block-image img-fluid" alt="WAV format">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Other Formats</h5>
+                                            <p class="mb-0">M4A, OGG, and more specialized formats</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-collection"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_audio_player_re_cl20.png') }}" 
+                                         class="custom-block-image img-fluid" alt="Other formats">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Speed Tab -->
+                    <div class="tab-pane fade" id="speed-tab-pane" role="tabpanel">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Instant Processing</h5>
+                                            <p class="mb-0">Extract audio in seconds, not minutes</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-speedometer2"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_instant_support_re_s7un.png') }}" 
+                                         class="custom-block-image img-fluid" alt="Fast processing">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Bulk Conversion</h5>
+                                            <p class="mb-0">Process multiple videos simultaneously</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-stack"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_processing_re_tbdu.png') }}" 
+                                         class="custom-block-image img-fluid" alt="Bulk conversion">
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-6 col-12">
+                                <div class="custom-block bg-white shadow-lg">
+                                    <div class="d-flex">
+                                        <div>
+                                            <h5 class="mb-2">Cloud Powered</h5>
+                                            <p class="mb-0">Leverage our powerful servers for quick results</p>
+                                        </div>
+                                        <span class="badge bg-music rounded-pill ms-auto"><i class="bi bi-cloud-arrow-up"></i></span>
+                                    </div>
+                                    <img src="{{ asset('assets/images/topics/undraw_cloud_files_wmo8.png') }}" 
+                                         class="custom-block-image img-fluid" alt="Cloud powered">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="timeline-section section-padding" id="section_3">
+    <div class="section-overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white mb-4">How to extract audio from video?</h2>
+            </div>
+            <div class="col-lg-10 col-12 mx-auto">
+                <div class="timeline-container">
+                    <ul class="vertical-scrollable-timeline" id="vertical-scrollable-timeline">
+                        <div class="list-progress">
+                            <div class="inner"></div>
+                        </div>
+                        <li>
+                            <h4 class="text-white mb-3">Upload Your Video</h4>
+                            <p class="text-white">Select any video file from your device or paste a URL from YouTube, Facebook, or Instagram.</p>
+                            <div class="icon-holder">
+                              <i class="bi-upload"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <h4 class="text-white mb-3">Audio Extraction</h4>
+                            <p class="text-white">Our system automatically separates the audio track from your video file.</p>
+                            <div class="icon-holder">
+                              <i class="bi-gear"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <h4 class="text-white mb-3">Download Audio</h4>
+                            <p class="text-white">Save your audio file in MP3, WAV, or other formats with your preferred quality settings.</p>
+                            <div class="icon-holder">
+                              <i class="bi-download"></i>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12 text-center mt-5">
+                <p class="text-white">
+                    Ready to try it out?
+                    <a href="#" class="btn custom-btn custom-border-btn ms-3">Convert Now</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="faq-section section-padding" id="section_4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-12">
+                <h2 class="mb-4">Frequently Asked Questions</h2>
+            </div>
+            <div class="clearfix"></div>
+            <div class="col-lg-5 col-12">
+                <img src="{{ asset('assets/images/faq_graphic.jpg') }}" class="img-fluid" alt="FAQs">
+            </div>
+            <div class="col-lg-6 col-12 m-auto">
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                What video formats are supported?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                We support <strong>MP4, MOV, AVI, WMV, MKV, FLV</strong> and most common video formats. For URLs, we support <strong>YouTube, Facebook, Instagram, Vimeo</strong> and other video sharing platforms.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                What audio formats can I export to?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                You can export to <strong>MP3, WAV, M4A, OGG, FLAC</strong> and other popular audio formats. MP3 is recommended for general use while WAV provides lossless quality.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Is there a file size limit?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                Free accounts can process files up to <strong>500MB</strong>. Premium accounts get <strong>2GB file size limit</strong> and faster processing. There's no limit for URL-based content.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                How long does the audio extraction take?
+                            </button>
+                        </h2>
+                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                Processing time depends on the video length and size. Typically, a 10-minute video takes about 30 seconds to process. Premium users get priority processing.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Conversion type switching
+    const conversionBtns = document.querySelectorAll('.conversion-btn');
+    const uploadTitle = document.getElementById('upload-title');
+    const fileUpload = document.getElementById('fileUpload');
+    
+    conversionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            conversionBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const target = this.dataset.target;
+            switch(target) {
+                case 'video-to-text':
+                    uploadTitle.textContent = 'Upload Video';
+                    fileUpload.accept = 'video/*';
+                    break;
+                case 'video-to-audio':
+                    uploadTitle.textContent = 'Upload Video';
+                    fileUpload.accept = 'video/*';
+                    break;
+                case 'audio-to-text':
+                    uploadTitle.textContent = 'Upload Audio';
+                    fileUpload.accept = 'audio/*';
+                    break;
+            }
+        });
+    });
+    
+    // File upload handling
+    fileUpload.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const uploadPreview = document.querySelector('.upload-preview');
+        const uploadImage = uploadPreview.querySelector('.upload-image');
+        const uploadInstructions = uploadPreview.querySelector('.upload-instructions');
+        const videoPlayerContainer = uploadPreview.querySelector('.video-player-container');
+        const audioPlayerContainer = uploadPreview.querySelector('.audio-player-container');
+        const processBtn = document.getElementById('processBtn');
+        
+        uploadImage.classList.add('d-none');
+        uploadInstructions.style.display = 'none';
+        
+        if (file.type.includes('video')) {
+            // For video files
+            videoPlayerContainer.classList.remove('d-none');
+            audioPlayerContainer.classList.add('d-none');
+            
+            const videoPlayer = document.getElementById('videoPlayer');
+            videoPlayer.src = URL.createObjectURL(file);
+            
+            // Set filename display
+            document.getElementById('audioFilename').textContent = 
+                file.name.replace(/\.[^/.]+$/, '') + '.mp3'; // Default to MP3
+            
+            // Extract duration
+            videoPlayer.addEventListener('loadedmetadata', function() {
+                document.getElementById('audioDuration').textContent = 
+                    formatDuration(videoPlayer.duration);
+            });
+            
+            // Calculate file size (estimate for MP3)
+            const estimatedSize = Math.round(file.size / 10); // Rough estimate
+            document.getElementById('audioSize').textContent = 
+                formatFileSize(estimatedSize);
+        } else if (file.type.includes('audio')) {
+            // For audio files
+            videoPlayerContainer.classList.add('d-none');
+            audioPlayerContainer.classList.remove('d-none');
+            
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = URL.createObjectURL(file);
+            
+            // Extract duration
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                document.getElementById('audioDuration').textContent = 
+                    formatDuration(audioPlayer.duration);
+            });
+            
+            document.getElementById('audioSize').textContent = 
+                formatFileSize(file.size);
+        }
+        
+        // Show process button
+        processBtn.classList.remove('d-none');
+    });
+    
+    // Process button click
+    document.getElementById('processBtn').addEventListener('click', function() {
+        const progressBar = document.getElementById('uploadProgress');
+        progressBar.classList.remove('d-none');
+        
+        // Simulate processing
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.querySelector('.progress-bar').style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                document.getElementById('statusBadge').innerHTML = 
+                    '<i class="bi-check-circle me-1"></i> Processed';
+                
+                // Simulate results
+                simulateAudioExtraction();
+            }
+        }, 300);
+    });
+    
+    // Download audio button
+    document.getElementById('downloadAudioBtn').addEventListener('click', function() {
+        // In a real app, this would download the actual extracted audio
+        alert('Audio download would start now in a real application');
+    });
+    
+    // Copy audio link button
+    document.getElementById('copyAudioLinkBtn').addEventListener('click', function() {
+        navigator.clipboard.writeText('https://example.com/audio-file.mp3').then(() => {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-check me-1"></i> Copied!';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 2000);
+        });
+    });
+    
+    // Format selection change
+    document.getElementById('audioFormatSelect').addEventListener('change', function() {
+        const format = this.value;
+        document.getElementById('audioFormat').textContent = format.toUpperCase();
+        
+        // Update filename extension
+        const currentFilename = document.getElementById('audioFilename').textContent;
+        const newFilename = currentFilename.replace(/\.[^/.]+$/, '') + '.' + format;
+        document.getElementById('audioFilename').textContent = newFilename;
+    });
+    
+    // Helper function to format duration
+    function formatDuration(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor(seconds % 3600 / 60);
+        const s = Math.floor(seconds % 60);
+        return [h > 0 ? h : null, m, s]
+            .filter(Boolean)
+            .map(v => v < 10 ? '0' + v : v)
+            .join(':');
+    }
+    
+    // Helper function to format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+    
+    // Simulate audio extraction results
+    function simulateAudioExtraction() {
+        const outputAudioPlayer = document.getElementById('outputAudioPlayer');
+        const fileUpload = document.getElementById('fileUpload');
+        const file = fileUpload.files[0];
+        
+        if (file) {
+            // Set the output audio player source (in a real app, this would be the extracted audio)
+            outputAudioPlayer.src = URL.createObjectURL(file);
+            
+            // Enable download and copy buttons
+            document.getElementById('downloadAudioBtn').disabled = false;
+            document.getElementById('copyAudioLinkBtn').disabled = false;
+            
+            // Show metadata
+            outputAudioPlayer.addEventListener('loadedmetadata', function() {
+                document.getElementById('audioDuration').textContent = 
+                    formatDuration(outputAudioPlayer.duration);
+            });
+        }
+    }
+});
+</script>
+
+
+
+@endsection
